@@ -35,28 +35,42 @@ function readUsers() {
   	return readDatabaseUsers();
 }
 
-function addOrUpdateUser(userId, name, gold) {
-	const users = readUsers();
-	if (users[userId]) {
-		users[userId].gold += gold;
-		if (users[userId].name !== name) {
-			users[userId].name = name;
-		}
-	} else {
-		users[userId] = { name, gold };
-	}
-	writeUsers(users);
-}
+// function addOrUpdateUser(userId, name, gold) {
+// 	const users = readUsers();
+// 	if (users[userId]) {
+// 		users[userId].gold += gold;
+// 		if (users[userId].name !== name) {
+// 			users[userId].name = name;
+// 		}
+// 	} else {
+// 		users[userId] = { name, gold };
+// 	}
+// 	writeUsers(users);
+// }
 
 function getUser(userId) {
 	const users = readUsers();
 	return users[userId] || null;
 }
 
+async function findUserVoiceChannelId(guild, userId) {
+	const guildId = guild?.id;
+	if (!guildId) return null;
+    const member = await guild.members.fetch(userId);
+    if (!member) return null;
+
+    if (member.voice && member.voice.channel) {
+        return member.voice.channel.id;
+    } else {
+        return null;
+    }
+}
+
 export default {
 	readDatabaseUsers,
 	readCurrentUsers,
 	writeUsers,
-	addOrUpdateUser,
-	getUser
+	// addOrUpdateUser,
+	getUser,
+	findUserVoiceChannelId
 };

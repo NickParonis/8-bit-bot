@@ -1,5 +1,4 @@
 import chalk from 'chalk';
-import userService from '../services/userService.js';
 import messageCommands from '../commands/messageCommands.js';
 
 async function messageCreateHandler(client) {
@@ -13,43 +12,35 @@ async function messageCreateHandler(client) {
 			chalk.green(message.content)
       	);
 
-		
-
 		if (message.author.bot ||
 				message.channel.id !== TERMINAL_CHANNEL_ID ||
 				!message.content.startsWith(COMMAND_PREFIX)){
 			return;
 		}
 
-      	const command = message.content.slice(COMMAND_PREFIX.length).trim();
 
-		if (command === 'readDiscordUsers') {
+
+		const command = message.content.slice(COMMAND_PREFIX.length).trim();
+		const commandName = command.split(' ')[0];
+		const args = command.slice(commandName.length).trim();
+
+		if (commandName === 'readDiscordUsers') {
 			await messageCommands.readDiscordUsers(message);
 		}
 
-		if (command === 'test') {
+		if (commandName === 'test') {
 			messageCommands.testBot(message);
+		}
+
+		if (commandName === 'chat') {
+			await messageCommands.chatBot(message, args);
+		}
+
+		if(commandName == 'join') {
+			await messageCommands.joinUser(message);
 		}
     });
 }
-
-// async function getAndDisplayDiscordUsers(message) {
-// 	try {
-// 		const guild = message.guild;
-// 		const currentUsers = await userService.readCurrentUsers(guild);
-
-// 		console.log('User IDs and Names:', currentUsers);
-
-// 		const formattedResponse = currentUsers
-// 		.map(user => `Name: ${user.globalName} - UserName: ${user.name} - (ID: ${user.id})`)
-// 		.join('\n');
-
-// 		message.channel.send(`\n${formattedResponse}`);
-// 	} catch (error) {
-// 		console.error('Error while fetching user IDs and names:', error);
-// 		message.channel.send('There was an error trying to fetch user IDs and names.');
-// 	}
-// }
 
 export default {
   messageCreateHandler
