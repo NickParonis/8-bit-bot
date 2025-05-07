@@ -1,22 +1,22 @@
 import { Client, GatewayIntentBits } from 'discord.js';
 import dotenv from 'dotenv';
-import { messageCreateHandler } from './events/messageCreate.js'; // Import your messageCreateHandler function
-import { readyHandler } from './events/ready.js';
+import messageHandler from './events/messageCreate.js';
+import ready from './events/ready.js';
 
 dotenv.config();
-const TOKEN = process.env.TOKEN; // Paste your bot token here
+const TOKEN = process.env.TOKEN;
 
 const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-	GatewayIntentBits.GuildMembers
-  ]
+	intents: [
+		GatewayIntentBits.Guilds,
+		GatewayIntentBits.GuildMessages,
+		GatewayIntentBits.MessageContent,
+		GatewayIntentBits.GuildMembers
+	]
 });
 
 // Initialize handlers
-readyHandler(client);
-messageCreateHandler(client);
+ready.readyHandler(client);
+messageHandler.messageCreateHandler(client);
 
 client.login(TOKEN);
