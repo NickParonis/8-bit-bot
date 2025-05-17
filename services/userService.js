@@ -56,6 +56,7 @@ function getUser(userId) {
 async function findUserVoiceChannelId(guild, userId) {
 	const guildId = guild?.id;
 	if (!guildId) return null;
+	
     const member = await guild.members.fetch(userId);
     if (!member) return null;
 

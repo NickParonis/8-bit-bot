@@ -1,6 +1,21 @@
 import userService from '../services/userService.js';
 import fetch from 'node-fetch';
-import { joinVoiceChannel, entersState, VoiceConnectionStatus } from '@discordjs/voice';
+import { 
+	joinVoiceChannel, 
+	createAudioResource, 
+	entersState, 
+	VoiceConnectionStatus, 
+	AudioPlayerStatus,
+	demuxProbe
+  } from '@discordjs/voice';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { createReadStream } from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 
 
 async function readDiscordUsers(message) {
@@ -65,29 +80,64 @@ async function chatBot(message, botMessage) {
 	}
 };
 
-async function joinUser(message){
-	const userId = message.author.id;
-	const channelId = await userService.findUserVoiceChannelId(message.guild, userId);
+async function connectUser(message){
+	const channelId = await userService.findUserVoiceChannelId(message.guild, message.author.id);
 	if (channelId) {
 		message.channel.send(`You are in voice channel with ID: ${channelId}`);
-
 		const connection = joinVoiceChannel({
 			channelId: channelId,
 			guildId: message.guild.id, // 📝 FIX: it’s message.guild.id (not guildId)
 			adapterCreator: message.guild.voiceAdapterCreator,
 			selfDeaf: false
 		});
- 
+
 		try {
+			console.log('Current connection state:', connection.state.status);
 			await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
 			console.log('✅ Bot successfully joined voice channel!');
+			return connection;
 		} catch (error) {
 			console.error('❌ Failed to join voice channel within 30 seconds:', error);
 			message.channel.send('Failed to join your voice channel.');
 			connection.destroy();
+			return null;
 		}
 	} else {
 		message.channel.send(`You're not currently in a voice channel.`);
+		return null;
+	}
+}
+
+async function playSound(storedConnection, storedPlayer, args) {
+	try {
+		var fileName = args + ".wav";
+		const filePath = path.resolve(__dirname, '..', 'sounds', fileName);
+		
+		const stream = createReadStream(filePath);
+
+		const { stream: probedStream, type } = await demuxProbe(stream);
+
+		if (!probedStream) {
+			console.error('Failed to process audio stream');
+			storedConnection.destroy();
+			return;
+		}
+
+		const resource = createAudioResource(probedStream, { inputType: type });
+		console.log('Audio resource created successfully:');
+		storedPlayer.play(resource);
+
+		storedPlayer.once(AudioPlayerStatus.Idle, () => {
+			console.log('Finished playing!');
+		});
+
+		storedPlayer.on('error', (error) => {
+			console.error('Error in audio player:', error);
+			storedConnection.destroy();
+		});
+	} catch (error) {
+		console.error('Failed to connect:', error);
+		storedConnection.destroy();
 	}
 }
 
@@ -95,5 +145,6 @@ export default {
     readDiscordUsers,
 	testBot,
 	chatBot,
-	joinUser
+	connectUser,
+	playSound,
 };
