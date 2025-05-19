@@ -12,6 +12,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { createReadStream } from 'fs';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -80,14 +81,13 @@ async function chatBot(message, botMessage) {
 	}
 };
 
-async function connectUser(message){
-	const channelId = await userService.findUserVoiceChannelId(message.guild, message.author.id);
+async function connectToChannel(guild, userId){
+	const channelId = await userService.findUserVoiceChannelId(guild, userId);
 	if (channelId) {
-		message.channel.send(`You are in voice channel with ID: ${channelId}`);
 		const connection = joinVoiceChannel({
 			channelId: channelId,
-			guildId: message.guild.id, // 📝 FIX: it’s message.guild.id (not guildId)
-			adapterCreator: message.guild.voiceAdapterCreator,
+			guildId: guild.id, // 📝 FIX: it’s message.guild.id (not guildId)
+			adapterCreator: guild.voiceAdapterCreator,
 			selfDeaf: false
 		});
 
@@ -98,21 +98,30 @@ async function connectUser(message){
 			return connection;
 		} catch (error) {
 			console.error('❌ Failed to join voice channel within 30 seconds:', error);
-			message.channel.send('Failed to join your voice channel.');
 			connection.destroy();
 			return null;
 		}
 	} else {
-		message.channel.send(`You're not currently in a voice channel.`);
+		console.log(`You're not currently in a voice channel.`);
 		return null;
 	}
 }
 
-async function playSound(storedConnection, storedPlayer, args) {
+async function playSound(storedConnection, storedPlayer, fileName) {
 	try {
-		var fileName = args + ".wav";
-		const filePath = path.resolve(__dirname, '..', 'sounds', fileName);
+		var file = fileName + ".wav";
+		const filePath = path.resolve(__dirname, '..', 'sounds', file);
 		
+		if (!fs.existsSync(filePath)) {
+			console.error('File does not exist:', filePath);
+			return;
+		}
+
+		if (storedPlayer.state.status !== AudioPlayerStatus.Idle) {
+			console.log('Stopping current playback...');
+			storedPlayer.stop(true);
+		}
+
 		const stream = createReadStream(filePath);
 
 		const { stream: probedStream, type } = await demuxProbe(stream);
@@ -145,6 +154,6 @@ export default {
     readDiscordUsers,
 	testBot,
 	chatBot,
-	connectUser,
+	connectToChannel,
 	playSound,
 };

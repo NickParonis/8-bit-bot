@@ -1,7 +1,9 @@
 import chalk from 'chalk';
 import messageController from '../commands/messageController.js';
 import { createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice';
+import { Client, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, EmbedBuilder } from 'discord.js';
 import ytdl from 'ytdl-core';
+
 
 async function messageCreateHandler(client) {
     const COMMAND_PREFIX = '%';
@@ -17,7 +19,7 @@ async function messageCreateHandler(client) {
 
 		if (
 			message.author.bot
-			|| message.channel.id !== TERMINAL_CHANNEL_ID
+			// || message.channel.id !== TERMINAL_CHANNEL_ID
 			// || !message.content.startsWith(COMMAND_PREFIX)
 		){
 			return;
@@ -45,7 +47,7 @@ async function messageCreateHandler(client) {
 				return;
 			}
 
-			const connection = await messageController.connectUser(message);
+			const connection = await messageController.connectToChannel(message.guild, message.author.id);
 			if (connection) {
 				subscribePlayer(connection, message.guild.id);
 			}
@@ -55,17 +57,13 @@ async function messageCreateHandler(client) {
 			let stored = voiceConnections.get(message.guild.id);
 		
 			if (!stored) {
-				const connection = await messageController.connectUser(message);
+				const connection = await messageController.connectToChannel(message.guild, message.author.id);
 				if (!connection) {
 					message.reply('Failed to join voice channel!');
 					return;
 				}
 				subscribePlayer(connection, message.guild.id)
-				// const player = createAudioPlayer();
-				// connection.subscribe(player);
-				// stored = { connection, player };
-				// voiceConnections.set(message.guild.id, stored);
-				// message.reply('Joined voice channel automatically.');
+				stored = voiceConnections.get(message.guild.id);
 			}
 		
 			await messageController.playSound(stored.connection, stored.player, args);
@@ -82,6 +80,69 @@ async function messageCreateHandler(client) {
 			}
 		}
 
+		if (commandName === 'b') {
+			const voiceEffectButtons = [
+			{ id: 'demacia', label: '🔊 demacia', style: ButtonStyle.Secondary },
+			{ id: 'drum', label: '🔊 drum', style: ButtonStyle.Secondary },
+			{ id: 'fart', label: '🔊 fart', style: ButtonStyle.Secondary },
+			{ id: 'horse1', label: '🔊 horse1', style: ButtonStyle.Secondary },
+			{ id: 'horse2', label: '🔊 horse2', style: ButtonStyle.Secondary },
+			{ id: 'horse3', label: '🔊 horse3', style: ButtonStyle.Secondary },
+			{ id: 'horse4', label: '🔊 horse4', style: ButtonStyle.Secondary },
+			{ id: 'mounoskilo', label: '🔊 mounoskilo', style: ButtonStyle.Secondary },
+			{ id: 'tsakonas', label: '🔊 tsakonas', style: ButtonStyle.Secondary },
+			{ id: 'leave', label: '🔊 leave', style: ButtonStyle.Danger },
+			];
+
+			// Group buttons into rows of 5 max
+			const rows = [];
+			for (let i = 0; i < voiceEffectButtons.length; i += 5) {
+				const row = new ActionRowBuilder();
+				const chunk = voiceEffectButtons.slice(i, i + 5);
+				chunk.forEach(button =>
+					row.addComponents(
+					new ButtonBuilder()
+						.setCustomId(button.id)
+						.setLabel(button.label)
+						.setStyle(button.style)
+					)
+				);
+				rows.push(row);
+			}
+		
+			await message.channel.send({
+				content: '**🎵 Sound Effects 🎵**',
+				components: rows,
+			});
+		}
+
+		if (commandName === 'a') {
+			const sounds = [
+				{ id: 'demacia', label: 'Demacia' },
+				{ id: 'drum', label: 'Drum Roll' },
+				{ id: 'fart', label: 'Fart Noise' },
+			];
+			
+			for (const sound of sounds) {
+				const embed = new EmbedBuilder()
+					.setColor(0x00AE86)
+					.setTitle(`🎵 ${sound.label}`)
+					.setDescription(`Click the button below to play the **${sound.label}** sound.`)
+					.setThumbnail('https://i.imgur.com/some-image.png'); // optional
+			
+				const row = new ActionRowBuilder().addComponents(
+					new ButtonBuilder()
+						.setCustomId(sound.id)
+						.setLabel(`▶️ Play ${sound.label}`)
+						.setStyle(ButtonStyle.Primary)
+				);
+			
+				await message.channel.send({
+					embeds: [embed],
+					components: [row],
+				});
+			}
+		}
 		// if (commandName === 'youtube') {
 		// 	let stored = voiceConnections.get(message.guild.id);
 		
@@ -135,6 +196,22 @@ async function messageCreateHandler(client) {
 		// 	}
 		// }
     });
+
+	client.on(Events.InteractionCreate, async (interaction) => {
+		if (!interaction.isButton()) return;
+		let stored = voiceConnections.get(interaction.guild.id);
+	
+		if (!stored) {
+			const connection = await messageController.connectToChannel(interaction.guild, interaction.user.id);
+			if (connection) {
+				subscribePlayer(connection, interaction.guild.id);
+			};
+			stored = voiceConnections.get(interaction.guild.id);
+		}
+
+		await interaction.deferUpdate();
+		await messageController.playSound(stored.connection, stored.player, interaction.customId);
+	});
 
 	const subscribePlayer = (connection, guildId) => {
 		let player = createAudioPlayer();
