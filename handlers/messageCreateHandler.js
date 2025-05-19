@@ -203,9 +203,11 @@ async function messageCreateHandler(client) {
 	
 		if (!stored) {
 			const connection = await messageController.connectToChannel(interaction.guild, interaction.user.id);
-			if (connection) {
-				subscribePlayer(connection, interaction.guild.id);
+			if (!connection) {
+				console.log('Failed to join voice channel!');
+				return;
 			};
+			subscribePlayer(connection, interaction.guild.id);
 			stored = voiceConnections.get(interaction.guild.id);
 		}
 
