@@ -3,10 +3,10 @@ import fs from 'fs';
 
 const usersFilePath = path.join(process.cwd(), 'DB', 'users.json');
 
-function readDatabaseUsers() {
-	const data = fs.readFileSync(usersFilePath, 'utf-8');
-	return JSON.parse(data);
-}
+// function readDatabaseUsers() {
+// 	const data = fs.readFileSync(usersFilePath, 'utf-8');
+// 	return JSON.parse(data);
+// }
 
 async function readCurrentUsers(guild) {
 	try {
@@ -27,13 +27,13 @@ async function readCurrentUsers(guild) {
 	}
 }
 
-function writeUsers(data) {
-  	fs.writeFileSync(usersFilePath, JSON.stringify(data, null, 2), 'utf-8');
-}
+// function writeUsers(data) {
+//   	fs.writeFileSync(usersFilePath, JSON.stringify(data, null, 2), 'utf-8');
+// }
 
-function readUsers() {
-  	return readDatabaseUsers();
-}
+// function readUsers() {
+//   	return readDatabaseUsers();
+// }
 
 // function addOrUpdateUser(userId, name, gold) {
 // 	const users = readUsers();
@@ -48,10 +48,10 @@ function readUsers() {
 // 	writeUsers(users);
 // }
 
-function getUser(userId) {
-	const users = readUsers();
-	return users[userId] || null;
-}
+// function getUser(userId) {
+// 	const users = readUsers();
+// 	return users[userId] || null;
+// }
 
 async function findUserVoiceChannelId(guild, userId) {
 	const guildId = guild?.id;
@@ -68,10 +68,10 @@ async function findUserVoiceChannelId(guild, userId) {
 }
 
 export default {
-	readDatabaseUsers,
+	// readDatabaseUsers,
 	readCurrentUsers,
-	writeUsers,
+	// writeUsers,
 	// addOrUpdateUser,
-	getUser,
+	// getUser,
 	findUserVoiceChannelId
 };

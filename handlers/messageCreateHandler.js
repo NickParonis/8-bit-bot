@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import messageController from '../commands/messageController.js';
+import messageController from '../controllers/messageController.js';
 import { createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice';
 import { Client, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, EmbedBuilder } from 'discord.js';
 import ytdl from 'ytdl-core';
@@ -7,16 +7,10 @@ import ytdl from 'ytdl-core';
 
 async function messageCreateHandler(client) {
     const COMMAND_PREFIX = '%';
-    const TERMINAL_CHANNEL_ID = '1367078981593202740';
-	let voiceConnections = new Map();
+    // const TERMINAL_CHANNEL_ID = '1367078981593202740';
+	let voiceSessions = new Map();
 
-    client.on('messageCreate', async (message) => {
-		console.log(
-			chalk.blue(message.author.globalName) +
-			chalk.white(' wrote ') +
-			chalk.green(message.content)
-      	);
-
+    client.on(Events.MessageCreate, async (message) => {
 		if (
 			message.author.bot
 			// || message.channel.id !== TERMINAL_CHANNEL_ID
@@ -42,38 +36,42 @@ async function messageCreateHandler(client) {
 		}
 
 		if (commandName === 'join') {
-			if (voiceConnections.has(message.guild.id)) {
+			if (voiceSessions.has(message.guild.id)) {
 				message.reply('Already connected to the voice channel!');
 				return;
 			}
-
-			const connection = await messageController.connectToChannel(message.guild, message.author.id);
-			if (connection) {
-				subscribePlayer(connection, message.guild.id);
+		
+			const voiceSession = await createVoiceSession(message.guild, message.author.id);
+			if (!voiceSession) {
+				message.reply('Failed to join voice channel!');
+				return;
 			}
+		
+			voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
+			message.reply('Connected to voice channel!');
 		}
 
 		if (commandName === 'play') {
-			let stored = voiceConnections.get(message.guild.id);
+			let storedVoiceSession = voiceSessions.get(message.guild.id);
 		
-			if (!stored) {
-				const connection = await messageController.connectToChannel(message.guild, message.author.id);
-				if (!connection) {
+			if (!storedVoiceSession) {
+				const voiceSession = await createVoiceSession(message.guild, message.author.id);
+				if (!voiceSession) {
 					message.reply('Failed to join voice channel!');
 					return;
 				}
-				subscribePlayer(connection, message.guild.id)
-				stored = voiceConnections.get(message.guild.id);
+				voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
+				storedVoiceSession = voiceSession.connectionData;
 			}
 		
-			await messageController.playSound(stored.connection, stored.player, args);
+			await messageController.playSound(storedVoiceSession, args);
 		}
 		
 		if (commandName === 'leave') {
-			const stored = voiceConnections.get(message.guild.id);
-			if (stored) {
-				stored.connection.destroy();
-				voiceConnections.delete(message.guild.id);
+			const storedVoiceSession = voiceSessions.get(message.guild.id);
+			if (storedVoiceSession) {
+				storedVoiceSession.connection.destroy();
+				voiceSessions.delete(message.guild.id);
 				message.reply('Disconnected from voice channel.');
 			} else {
 				message.reply('I am not in a voice channel!');
@@ -143,84 +141,38 @@ async function messageCreateHandler(client) {
 				});
 			}
 		}
-		// if (commandName === 'youtube') {
-		// 	let stored = voiceConnections.get(message.guild.id);
-		
-		// 	if (!stored) {
-		// 		const connection = await messageController.joinUser(message);
-		// 		if (!connection) {
-		// 			message.reply('Failed to join voice channel!');
-		// 			return;
-		// 		}
-		// 		const player = createAudioPlayer();
-		// 		connection.subscribe(player);
-		// 		stored = { connection, player };
-		// 		voiceConnections.set(message.guild.id, stored);
-		// 		message.reply('Joined voice channel automatically.');
-		// 	}
-		
-		// 	const youtubeURL = args;
-		
-		// 	if (!ytdl.validateURL(youtubeURL)) {
-		// 		message.reply('Invalid YouTube URL!');
-		// 		return;
-		// 	}
-		
-		// 	try {
-		// 		const stream = ytdl(youtubeURL, {
-		// 			filter: 'audioonly',
-		// 			quality: 'highestaudio',
-		// 			highWaterMark: 1 << 25
-		// 		});
-		
-		// 		const resource = createAudioResource(stream);
-		
-		// 		stored.player.play(resource);
-		
-		// 		message.reply(`Now playing: ${youtubeURL}`);
-		
-		// 		stored.player.once(AudioPlayerStatus.Idle, () => {
-		// 			message.channel.send('Finished playing!');
-		// 		});
-		
-		// 		stored.player.on('error', (error) => {
-		// 			console.error('Error in audio player:', error);
-		// 			stored.connection.destroy();
-		// 			voiceConnections.delete(message.guild.id);
-		// 			message.channel.send('Playback error occurred. Disconnected from voice channel.');
-		// 		});
-		
-		// 	} catch (error) {
-		// 		console.error('Failed to play YouTube audio:', error);
-		// 		message.reply('An error occurred while trying to play the YouTube audio.');
-		// 	}
-		// }
+
     });
 
 	client.on(Events.InteractionCreate, async (interaction) => {
 		if (!interaction.isButton()) return;
-		let stored = voiceConnections.get(interaction.guild.id);
 	
-		if (!stored) {
-			const connection = await messageController.connectToChannel(interaction.guild, interaction.user.id);
-			if (!connection) {
-				console.log('Failed to join voice channel!');
-				return;
-			};
-			subscribePlayer(connection, interaction.guild.id);
-			stored = voiceConnections.get(interaction.guild.id);
-		}
+		let storedVoiceSession = voiceSessions.get(interaction.guild.id);
+	
+		if (!storedVoiceSession) {
+			const voiceSession = await createVoiceSession(interaction.guild, interaction.user.id);
+			if (!voiceSession) return console.log('Failed to join voice channel!');
 
+			voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
+			storedVoiceSession = voiceSession.connectionData;
+		}
+	
 		await interaction.deferUpdate();
-		await messageController.playSound(stored.connection, stored.player, interaction.customId);
+		await messageController.playSound(storedVoiceSession, interaction.customId);
 	});
 
-	const subscribePlayer = (connection, guildId) => {
-		let player = createAudioPlayer();
+	const createVoiceSession = async (guild, userId) => {
+		const connection = await messageController.connectToChannel(guild, userId);
+		if (!connection) return null;
+	
+		const player = createAudioPlayer();
 		connection.subscribe(player);
-		let stored = { connection, player };
-		voiceConnections.set(guildId, stored);
-	}
+	
+		return {
+			guildId: guild.id,
+			connectionData: { connection, player }
+		};
+	};
 }
 
 export default {
