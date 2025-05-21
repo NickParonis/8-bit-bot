@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits } from 'discord.js';
 import dotenv from 'dotenv';
 import messageHandler from './handlers/messageCreateHandler.js';
+import eventHandler from './handlers/eventHandler.js';
 import ready from './handlers/readyHandler.js';
 
 dotenv.config();
@@ -19,5 +20,6 @@ const client = new Client({
 // Initialize handlers
 ready.readyHandler(client);
 messageHandler.messageCreateHandler(client);
+eventHandler.eventHandler(client);
 
 client.login(TOKEN);

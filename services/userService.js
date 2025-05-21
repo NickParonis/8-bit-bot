@@ -25,7 +25,7 @@ async function readCurrentUsers(guild) {
 		console.error('Error fetching members:', error);
 		throw new Error('Unable to fetch user IDs and names.');
 	}
-}
+};
 
 // function writeUsers(data) {
 //   	fs.writeFileSync(usersFilePath, JSON.stringify(data, null, 2), 'utf-8');
@@ -65,7 +65,7 @@ async function findUserVoiceChannelId(guild, userId) {
     } else {
         return null;
     }
-}
+};
 
 export default {
 	// readDatabaseUsers,

@@ -1,8 +1,6 @@
-import chalk from 'chalk';
 import messageController from '../controllers/messageController.js';
-import { createAudioPlayer, createAudioResource, AudioPlayerStatus } from '@discordjs/voice';
-import { Client, GatewayIntentBits, ActionRowBuilder, ButtonBuilder, ButtonStyle, Events, EmbedBuilder } from 'discord.js';
-import ytdl from 'ytdl-core';
+import { ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
+import userController from '../controllers/userController.js';
 
 
 async function messageCreateHandler(client) {
@@ -14,7 +12,7 @@ async function messageCreateHandler(client) {
 		if (
 			message.author.bot
 			// || message.channel.id !== TERMINAL_CHANNEL_ID
-			// || !message.content.startsWith(COMMAND_PREFIX)
+			|| !message.content.startsWith(COMMAND_PREFIX)
 		){
 			return;
 		}
@@ -24,7 +22,7 @@ async function messageCreateHandler(client) {
 		const args = command.slice(commandName.length).trim();
 
 		if (commandName === 'readDiscordUsers') {
-			await messageController.readDiscordUsers(message);
+			await userController.readDiscordUsers(message);
 		}
 
 		if (commandName === 'test') {
@@ -41,7 +39,7 @@ async function messageCreateHandler(client) {
 				return;
 			}
 		
-			const voiceSession = await createVoiceSession(message.guild, message.author.id);
+			const voiceSession = await messageController.createVoiceSession(message.guild, message.author.id);
 			if (!voiceSession) {
 				message.reply('Failed to join voice channel!');
 				return;
@@ -51,21 +49,21 @@ async function messageCreateHandler(client) {
 			message.reply('Connected to voice channel!');
 		}
 
-		if (commandName === 'play') {
-			let storedVoiceSession = voiceSessions.get(message.guild.id);
+		// if (commandName === 'play') {
+		// 	let storedVoiceSession = voiceSessions.get(message.guild.id);
 		
-			if (!storedVoiceSession) {
-				const voiceSession = await createVoiceSession(message.guild, message.author.id);
-				if (!voiceSession) {
-					message.reply('Failed to join voice channel!');
-					return;
-				}
-				voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
-				storedVoiceSession = voiceSession.connectionData;
-			}
+		// 	if (!storedVoiceSession) {
+		// 		const voiceSession = await messageController.createVoiceSession(message.guild, message.author.id);
+		// 		if (!voiceSession) {
+		// 			message.reply('Failed to join voice channel!');
+		// 			return;
+		// 		}
+		// 		voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
+		// 		storedVoiceSession = voiceSession.connectionData;
+		// 	}
 		
-			await messageController.playSound(storedVoiceSession, args);
-		}
+		// 	await messageController.playSound(storedVoiceSession, args);
+		// }
 		
 		if (commandName === 'leave') {
 			const storedVoiceSession = voiceSessions.get(message.guild.id);
@@ -78,102 +76,100 @@ async function messageCreateHandler(client) {
 			}
 		}
 
-		if (commandName === 'b') {
-			const voiceEffectButtons = [
-			{ id: 'demacia', label: '🔊 demacia', style: ButtonStyle.Secondary },
-			{ id: 'drum', label: '🔊 drum', style: ButtonStyle.Secondary },
-			{ id: 'fart', label: '🔊 fart', style: ButtonStyle.Secondary },
-			{ id: 'horse1', label: '🔊 horse1', style: ButtonStyle.Secondary },
-			{ id: 'horse2', label: '🔊 horse2', style: ButtonStyle.Secondary },
-			{ id: 'horse3', label: '🔊 horse3', style: ButtonStyle.Secondary },
-			{ id: 'horse4', label: '🔊 horse4', style: ButtonStyle.Secondary },
-			{ id: 'mounoskilo', label: '🔊 mounoskilo', style: ButtonStyle.Secondary },
-			{ id: 'tsakonas', label: '🔊 tsakonas', style: ButtonStyle.Secondary },
-			{ id: 'leave', label: '🔊 leave', style: ButtonStyle.Danger },
-			];
+		if (commandName === 'createBoard') {
+			try {
 
-			// Group buttons into rows of 5 max
-			const rows = [];
-			for (let i = 0; i < voiceEffectButtons.length; i += 5) {
-				const row = new ActionRowBuilder();
-				const chunk = voiceEffectButtons.slice(i, i + 5);
-				chunk.forEach(button =>
-					row.addComponents(
-					new ButtonBuilder()
-						.setCustomId(button.id)
-						.setLabel(button.label)
-						.setStyle(button.style)
-					)
-				);
-				rows.push(row);
-			}
+				const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
+				await message.channel.bulkDelete(fetchedMessages, true);
+
+
+				const buttonGroups = [
+					[
+					  { id: 'demacia', label: '🔊 demacia', style: ButtonStyle.Secondary },
+					  { id: 'drum', label: '🔊 drum', style: ButtonStyle.Secondary },
+					  { id: 'fart', label: '🔊 FartHD', style: ButtonStyle.Secondary },
+					],
+					[
+					  { id: 'horse1', label: '🔊 horse1', style: ButtonStyle.Secondary },
+					  { id: 'horse2', label: '🔊 horse2', style: ButtonStyle.Secondary },
+					  { id: 'horse3', label: '🔊 horse3', style: ButtonStyle.Secondary },
+					],
+					[
+					  { id: 'leave', label: 'Leave', style: ButtonStyle.Danger },
+					],
+				  ];
+				  
+				  for (const group of buttonGroups) {
+					// Create embed for this group (you can customize title/description per group)
+					const embed = new EmbedBuilder()
+					  .setTitle('🎤 Voice Connection Error') // Customize if needed per group
+					  .setDescription('The bot failed to join your voice channel. Please check permissions or try again.')
+					  .setColor('Red')
+					  .setFooter({ text: 'Choose an option below:' });
+				  
+					// Create one action row for each button in the group
+					// Note: Each ActionRow can have max 5 buttons, so if group has >5 buttons, split into multiple rows
+					const rows = [];
+					for (let i = 0; i < group.length; i += 5) {
+					  const row = new ActionRowBuilder();
+					  const chunk = group.slice(i, i + 5);
+					  for (const btn of chunk) {
+						row.addComponents(
+						  new ButtonBuilder()
+							.setCustomId(btn.id)
+							.setLabel(btn.label)
+							.setStyle(btn.style)
+						);
+					  }
+					  rows.push(row);
+					}
+				  
+					// Send the embed + all button rows for this group
+					await message.channel.send({
+					  embeds: [embed],
+					  components: rows,
+					});
+				  }
+				// const voiceEffectButtons = [
+				// 	{ id: 'demacia', label: '🔊 demacia', style: ButtonStyle.Secondary },
+				// 	{ id: 'drum', label: '🔊 drum', style: ButtonStyle.Secondary },
+				// 	{ id: 'fart', label: '🔊 FartHD', style: ButtonStyle.Secondary },
+				// 	{ id: 'horse1', label: '🔊 horse1', style: ButtonStyle.Secondary },
+				// 	{ id: 'horse2', label: '🔊 horse2', style: ButtonStyle.Secondary },
+				// 	{ id: 'horse3', label: '🔊 horse3', style: ButtonStyle.Secondary },
+				// 	{ id: 'horse4', label: '🔊 horse4', style: ButtonStyle.Secondary },
+				// 	{ id: 'mounoskilo', label: '🔊 mounoskilo', style: ButtonStyle.Secondary },
+				// 	{ id: 'tsakonas', label: '🔊 tsakonas', style: ButtonStyle.Secondary },
+				// 	{ id: 'leave', label: '🔊 leave', style: ButtonStyle.Danger },
+				// ];
+
+
+				// for (const buttonDef of voiceEffectButtons) {
+				// 	const content = `➡️ **${buttonDef.label}**`;
+
+				// 	const row = new ActionRowBuilder().addComponents(
+				// 	new ButtonBuilder()
+				// 		.setCustomId(buttonDef.id)
+				// 		.setLabel(buttonDef.label)
+				// 		.setStyle(buttonDef.style)
+				// 	);
+
+				// 	await message.channel.send({
+				// 	content,
+				// 	components: [row],
+				// 	});
+				// }
+
 		
-			await message.channel.send({
-				content: '**🎵 Sound Effects 🎵**',
-				components: rows,
-			});
-		}
-
-		if (commandName === 'a') {
-			const sounds = [
-				{ id: 'demacia', label: 'Demacia' },
-				{ id: 'drum', label: 'Drum Roll' },
-				{ id: 'fart', label: 'Fart Noise' },
-			];
-			
-			for (const sound of sounds) {
-				const embed = new EmbedBuilder()
-					.setColor(0x00AE86)
-					.setTitle(`🎵 ${sound.label}`)
-					.setDescription(`Click the button below to play the **${sound.label}** sound.`)
-					.setThumbnail('https://i.imgur.com/some-image.png'); // optional
-			
-				const row = new ActionRowBuilder().addComponents(
-					new ButtonBuilder()
-						.setCustomId(sound.id)
-						.setLabel(`▶️ Play ${sound.label}`)
-						.setStyle(ButtonStyle.Primary)
-				);
-			
-				await message.channel.send({
-					embeds: [embed],
-					components: [row],
-				});
+			} catch (error) {
+				console.error('Failed to clear board messages or send new board:', error);
+				await message.channel.send('Sorry, I couldn\'t update the sound effects board.');
 			}
 		}
 
     });
 
-	client.on(Events.InteractionCreate, async (interaction) => {
-		if (!interaction.isButton()) return;
-	
-		let storedVoiceSession = voiceSessions.get(interaction.guild.id);
-	
-		if (!storedVoiceSession) {
-			const voiceSession = await createVoiceSession(interaction.guild, interaction.user.id);
-			if (!voiceSession) return console.log('Failed to join voice channel!');
-
-			voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
-			storedVoiceSession = voiceSession.connectionData;
-		}
-	
-		await interaction.deferUpdate();
-		await messageController.playSound(storedVoiceSession, interaction.customId);
-	});
-
-	const createVoiceSession = async (guild, userId) => {
-		const connection = await messageController.connectToChannel(guild, userId);
-		if (!connection) return null;
-	
-		const player = createAudioPlayer();
-		connection.subscribe(player);
-	
-		return {
-			guildId: guild.id,
-			connectionData: { connection, player }
-		};
-	};
-}
+};
 
 export default {
   	messageCreateHandler

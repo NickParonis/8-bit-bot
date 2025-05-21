@@ -1,41 +1,6 @@
 import userService from '../services/userService.js';
-import fetch from 'node-fetch';
-import { 
-	joinVoiceChannel, 
-	createAudioResource, 
-	entersState, 
-	VoiceConnectionStatus, 
-	AudioPlayerStatus,
-	demuxProbe
-  } from '@discordjs/voice';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { createReadStream } from 'fs';
-import fs from 'fs';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-
-
-async function readDiscordUsers(message) {
-	try {
-		const guild = message.guild;
-		const currentUsers = await userService.readCurrentUsers(guild);
-
-		console.log('User IDs and Names:', currentUsers);
-
-		const formattedResponse = currentUsers
-		.map(user => `Name: ${user.globalName} - UserName: ${user.name} - (ID: ${user.id})`)
-		.join('\n');
-
-		message.channel.send(`\n${formattedResponse}`);
-	} catch (error) {
-		console.error('Error while fetching user IDs and names:', error);
-		message.channel.send('There was an error trying to fetch user IDs and names.');
-	}
-};
+import voiceService from '../services/voiceService.js';
+import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
 
 function testBot(message) {
 	message.channel.send(`Up and running`);
@@ -81,79 +46,43 @@ function testBot(message) {
 // 	}
 // };
 
-async function connectToChannel(guild, userId){
-	const channelId = await userService.findUserVoiceChannelId(guild, userId);
-	if (channelId) {
-		const connection = joinVoiceChannel({
-			channelId: channelId,
-			guildId: guild.id, // 📝 FIX: it’s message.guild.id (not guildId)
-			adapterCreator: guild.voiceAdapterCreator,
-			selfDeaf: false
-		});
+async function createVoiceSession(interaction, channelId) {
+	let connection;
 
-		try {
-			console.log('Current connection state:', connection.state.status);
-			await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
-			console.log('✅ Bot successfully joined voice channel!');
-			return connection;
-		} catch (error) {
-			console.error('❌ Failed to join voice channel within 30 seconds:', error);
+	try {
+		connection = await voiceService.connectToChannel(interaction.guild, channelId);
+		const player = voiceService.createPlayer();
+		connection.subscribe(player);
+
+		return {connection, player};
+	} catch (error) {
+		console.error('❌ Failed to create voice session:', error.message);
+
+		if (connection) {
 			connection.destroy();
-			return null;
+			console.log('🧹 Destroyed incomplete connection.');
 		}
-	} else {
-		console.log(`You're not currently in a voice channel.`);
+
+		await interaction.reply({
+			content: 'Failed to join your channel: ' + error.message,
+			ephemeral: true
+		});
+		
 		return null;
 	}
-}
+};
 
 async function playSound(voiceSession, fileName) {
 	try {
-		var file = fileName + ".wav";
-		const filePath = path.resolve(__dirname, '..', 'sounds', file);
-		
-		if (!fs.existsSync(filePath)) {
-			console.error('File does not exist:', filePath);
-			return;
-		}
-
-		if (voiceSession.player.state.status !== AudioPlayerStatus.Idle) {
-			console.log('Stopping current playback...');
-			voiceSession.player.stop(true);
-		}
-
-		const stream = createReadStream(filePath);
-
-		const { stream: probedStream, type } = await demuxProbe(stream);
-
-		if (!probedStream) {
-			console.error('Failed to process audio stream');
-			voiceSession.connection.destroy();
-			return;
-		}
-
-		const resource = createAudioResource(probedStream, { inputType: type });
-		console.log('Audio resource created successfully:');
-		voiceSession.player.play(resource);
-
-		voiceSession.player.once(AudioPlayerStatus.Idle, () => {
-			console.log('Finished playing!');
-		});
-
-		voiceSession.player.on('error', (error) => {
-			console.error('Error in audio player:', error);
-			voiceSession.connection.destroy();
-		});
+		await voiceService.playAudioFile(voiceSession, fileName);
 	} catch (error) {
-		console.error('Failed to connect:', error);
-		voiceSession.connection.destroy();
+		console.error('Controller: playSound failed', error);
+		await voiceSession.connection.destroy();
 	}
-}
+};
 
 export default {
-    readDiscordUsers,
 	testBot,
-	chatBot,
-	connectToChannel,
+	createVoiceSession,
 	playSound,
 };
