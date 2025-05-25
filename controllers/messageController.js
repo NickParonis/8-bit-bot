@@ -80,6 +80,10 @@ async function playSound(voiceSession, fileName) {
 	}
 };
 
+async function joinChannel(voiceSession){
+	
+}
+
 export default {
 	testBot,
 	createVoiceSession,

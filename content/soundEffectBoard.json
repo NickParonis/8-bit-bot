@@ -2,47 +2,49 @@
     {
         "groupId": "0",
         "embed": {
-            "title": "Invite 8-bit-bot",
-            "Color": "Red",
-            "BannerImageName": "",
-            "ThumbnailImageName": "thumbnail.png",
-            "description": "You can invite me to your channel, and I can mimic sounds or play music for you. But you can directly use on of the voice effects and streams directly instead, I will be able to find your channel and join"
+            "title": "",
+            "Color": "Blue",
+            "BannerImageName": "banner.jpg",
+            "ThumbnailImageName": "",
+            "Footer": "You can invite me to your channel and I can mimic sounds or play music for you. You can use on of the voice buttons directly instead and I will be able to find your channel and join.",
+            "description": " "
         },
         "buttons": [
-            { "id": "join", "label": "Join", "style": "Primary" },
-            { "id": "leave", "label": "Kick", "style": "Danger" }
+            { "id": "joinChannel", "label": "Join", "style": "Success" },
+            { "id": "leaveChannel", "label": "Kick", "style": "Danger" }
         ]
     },
     {
         "groupId": "1",
         "embed": {   
-            "title": "Memes",
-            "Color": "Red",
+            "title": "",
+            "Color": "Blue",
             "BannerImageName": "",
-            "ThumbnailImageName": "thumbnail.png",
-            "description": "lorem ipsum"
-        }
-        ,
-        "description": "lorem ipsum",
+            "ThumbnailImageName": "memeThumbnail.png",
+            "description": "",
+            "Footer": ""
+        },
         "buttons": [
-            { "id": "demacia", "label": "🔊 demacia", "style": "Primary" },
-            { "id": "drum", "label": "🔊 drum", "style": "Primary" },
-            { "id": "fart", "label": "🔊 FartHD", "style": "Primary" }
+            { "id": "playSound_demacia", "label": "🔊 demacia", "style": "Primary" },
+            { "id": "playSound_drum", "label": "🔊 drum", "style": "Primary" },
+            { "id": "playSound_fart", "label": "🔊 FartHD", "style": "Primary" },
+            { "id": "playSound_Horn", "label": "🔊 Horn", "style": "Primary" }
         ]
     },
     {
         "groupId": "2",
         "embed": {   
-            "title": "Horse",
-            "Color": "Red",
+            "title": "",
+            "Color": "Blue",
             "BannerImageName": "",
-            "ThumbnailImageName": "thumbnail.png",
-            "description": "lorem ipsum"
+            "ThumbnailImageName": "horseThumbnail2.png",
+            "description": "",
+            "Footer": ""
         },
         "buttons": [
-            { "id": "horse1", "label": "🔊 horse1", "style": "Primary" },
-            { "id": "horse2", "label": "🔊 horse2", "style": "Primary" },
-            { "id": "horse3", "label": "🔊 horse3", "style": "Primary" }
+            { "id": "playSound_horse_neigh", "label": "🔊 neigh", "style": "Primary" },
+            { "id": "playSound_horse_walk", "label": "🔊 walk", "style": "Primary" },
+            { "id": "playSound_horse_neeeeigh", "label": "🔊 neeeeigh", "style": "Primary" }
         ]
     }
 ]

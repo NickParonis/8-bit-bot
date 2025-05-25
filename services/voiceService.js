@@ -40,7 +40,7 @@ function createPlayer(){
 
 async function playAudioFile(voiceSession, fileName) {
 	const file = fileName + ".wav";
-	const filePath = path.resolve(__dirname, '..', 'sounds', file);
+	const filePath = path.resolve(__dirname, '..', 'content/soundEffects', file);
 
 	if (!fs.existsSync(filePath)) {
 		throw new Error(`File does not exist: ${filePath}`);

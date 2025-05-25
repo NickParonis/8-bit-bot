@@ -79,11 +79,19 @@ async function messageCreateHandler(client) {
 
 					// each groop displays/sends in message channel 1 embed and rows of up to 5 buttons
 					const embed = new EmbedBuilder()
-						.setTitle(group.embed.title)
-						.setDescription(group.embed.description)
-						.setColor(group.embed.Color)
-						.setFooter({ text: '\u200B' }); // Invisible footer
+						.setColor(group.embed.Color);
 				  
+					if(group.embed.description){
+						embed.setDescription(group.embed.description)
+					}
+
+					if(group.embed.title){
+						embed.setTitle(group.embed.title)
+					}
+
+					if(group.embed.Footer){
+						embed.setFooter({ text: group.embed.Footer })
+					}
 
 					const files = [];	
 					if (group.embed.BannerImageName) {
