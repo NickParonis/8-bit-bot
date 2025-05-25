@@ -1,6 +1,5 @@
 import userService from '../services/userService.js';
 import voiceService from '../services/voiceService.js';
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
 
 function testBot(message) {
 	message.channel.send(`Up and running`);

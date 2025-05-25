@@ -1,21 +1,23 @@
 import messageController from '../controllers/messageController.js';
-import { ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
+import { AttachmentBuilder, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
 import userController from '../controllers/userController.js';
-
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 async function messageCreateHandler(client) {
     const COMMAND_PREFIX = '%';
     // const TERMINAL_CHANNEL_ID = '1367078981593202740';
 	let voiceSessions = new Map();
+	const __filename = fileURLToPath(import.meta.url);
+	const __dirname = path.dirname(__filename);
 
     client.on(Events.MessageCreate, async (message) => {
 		if (
 			message.author.bot
 			// || message.channel.id !== TERMINAL_CHANNEL_ID
 			|| !message.content.startsWith(COMMAND_PREFIX)
-		){
-			return;
-		}
+		){return;}
 
 		const command = message.content.slice(COMMAND_PREFIX.length).trim();
 		const commandName = command.split(' ')[0];
@@ -48,22 +50,6 @@ async function messageCreateHandler(client) {
 			voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
 			message.reply('Connected to voice channel!');
 		}
-
-		// if (commandName === 'play') {
-		// 	let storedVoiceSession = voiceSessions.get(message.guild.id);
-		
-		// 	if (!storedVoiceSession) {
-		// 		const voiceSession = await messageController.createVoiceSession(message.guild, message.author.id);
-		// 		if (!voiceSession) {
-		// 			message.reply('Failed to join voice channel!');
-		// 			return;
-		// 		}
-		// 		voiceSessions.set(voiceSession.guildId, voiceSession.connectionData);
-		// 		storedVoiceSession = voiceSession.connectionData;
-		// 	}
-		
-		// 	await messageController.playSound(storedVoiceSession, args);
-		// }
 		
 		if (commandName === 'leave') {
 			const storedVoiceSession = voiceSessions.get(message.guild.id);
@@ -82,85 +68,61 @@ async function messageCreateHandler(client) {
 				const fetchedMessages = await message.channel.messages.fetch({ limit: 100 });
 				await message.channel.bulkDelete(fetchedMessages, true);
 
-
-				const buttonGroups = [
-					[
-					  { id: 'demacia', label: '🔊 demacia', style: ButtonStyle.Secondary },
-					  { id: 'drum', label: '🔊 drum', style: ButtonStyle.Secondary },
-					  { id: 'fart', label: '🔊 FartHD', style: ButtonStyle.Secondary },
-					],
-					[
-					  { id: 'horse1', label: '🔊 horse1', style: ButtonStyle.Secondary },
-					  { id: 'horse2', label: '🔊 horse2', style: ButtonStyle.Secondary },
-					  { id: 'horse3', label: '🔊 horse3', style: ButtonStyle.Secondary },
-					],
-					[
-					  { id: 'leave', label: 'Leave', style: ButtonStyle.Danger },
-					],
-				  ];
+				const jsonPath = path.join(__dirname, '../content/soundEffectBoard.json');
+				const rawData = fs.readFileSync(jsonPath, 'utf8');
+				const soundEffectBoard = JSON.parse(rawData);
 				  
-				  for (const group of buttonGroups) {
-					// Create embed for this group (you can customize title/description per group)
+				for (const group of soundEffectBoard) {
+
+					const bannerPath = path.join(__dirname, '../content/img', group.embed.BannerImageName);
+					const thumbPath = path.join(__dirname, '../content/img', group.embed.ThumbnailImageName);
+
+					// each groop displays/sends in message channel 1 embed and rows of up to 5 buttons
 					const embed = new EmbedBuilder()
-					  .setTitle('🎤 Voice Connection Error') // Customize if needed per group
-					  .setDescription('The bot failed to join your voice channel. Please check permissions or try again.')
-					  .setColor('Red')
-					  .setFooter({ text: 'Choose an option below:' });
+						.setTitle(group.embed.title)
+						.setDescription(group.embed.description)
+						.setColor(group.embed.Color)
+						.setFooter({ text: '\u200B' }); // Invisible footer
 				  
-					// Create one action row for each button in the group
-					// Note: Each ActionRow can have max 5 buttons, so if group has >5 buttons, split into multiple rows
-					const rows = [];
-					for (let i = 0; i < group.length; i += 5) {
-					  const row = new ActionRowBuilder();
-					  const chunk = group.slice(i, i + 5);
-					  for (const btn of chunk) {
-						row.addComponents(
-						  new ButtonBuilder()
-							.setCustomId(btn.id)
-							.setLabel(btn.label)
-							.setStyle(btn.style)
-						);
-					  }
-					  rows.push(row);
+
+					const files = [];	
+					if (group.embed.BannerImageName) {
+						embed.setImage(`attachment://${group.embed.BannerImageName}`);
+						const bannerPath = path.join(__dirname, '../content/img', group.embed.BannerImageName);
+						files.push(new AttachmentBuilder(bannerPath, { name: group.embed.BannerImageName }));
 					}
-				  
-					// Send the embed + all button rows for this group
+					
+					if (group.embed.ThumbnailImageName) {
+						embed.setThumbnail(`attachment://${group.embed.ThumbnailImageName}`);
+						const thumbPath = path.join(__dirname, '../content/img', group.embed.ThumbnailImageName);
+						files.push(new AttachmentBuilder(thumbPath, { name: group.embed.ThumbnailImageName }));
+					}
+
+					const rows = [];
+					for (let i = 0; i < group.buttons.length; i += 5) {
+						const row = new ActionRowBuilder();
+						const chunk = group.buttons.slice(i, i + 5);
+					
+						chunk.forEach(btn => {
+							row.addComponents(new ButtonBuilder()
+								.setCustomId(btn.id)
+								.setLabel(btn.label)
+								.setStyle(ButtonStyle[btn.style]) 
+							);
+						});
+				
+					  	rows.push(row);
+					};
+
+
 					await message.channel.send({
-					  embeds: [embed],
-					  components: rows,
+						embeds: [embed],
+						components: rows,
+						files: files,
 					});
-				  }
-				// const voiceEffectButtons = [
-				// 	{ id: 'demacia', label: '🔊 demacia', style: ButtonStyle.Secondary },
-				// 	{ id: 'drum', label: '🔊 drum', style: ButtonStyle.Secondary },
-				// 	{ id: 'fart', label: '🔊 FartHD', style: ButtonStyle.Secondary },
-				// 	{ id: 'horse1', label: '🔊 horse1', style: ButtonStyle.Secondary },
-				// 	{ id: 'horse2', label: '🔊 horse2', style: ButtonStyle.Secondary },
-				// 	{ id: 'horse3', label: '🔊 horse3', style: ButtonStyle.Secondary },
-				// 	{ id: 'horse4', label: '🔊 horse4', style: ButtonStyle.Secondary },
-				// 	{ id: 'mounoskilo', label: '🔊 mounoskilo', style: ButtonStyle.Secondary },
-				// 	{ id: 'tsakonas', label: '🔊 tsakonas', style: ButtonStyle.Secondary },
-				// 	{ id: 'leave', label: '🔊 leave', style: ButtonStyle.Danger },
-				// ];
+					await message.channel.send({ content: '\u200B' });
+				}
 
-
-				// for (const buttonDef of voiceEffectButtons) {
-				// 	const content = `➡️ **${buttonDef.label}**`;
-
-				// 	const row = new ActionRowBuilder().addComponents(
-				// 	new ButtonBuilder()
-				// 		.setCustomId(buttonDef.id)
-				// 		.setLabel(buttonDef.label)
-				// 		.setStyle(buttonDef.style)
-				// 	);
-
-				// 	await message.channel.send({
-				// 	content,
-				// 	components: [row],
-				// 	});
-				// }
-
-		
 			} catch (error) {
 				console.error('Failed to clear board messages or send new board:', error);
 				await message.channel.send('Sorry, I couldn\'t update the sound effects board.');

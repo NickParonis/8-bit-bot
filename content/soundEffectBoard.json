@@ -1,0 +1,48 @@
+[
+    {
+        "groupId": "0",
+        "embed": {
+            "title": "Invite 8-bit-bot",
+            "Color": "Red",
+            "BannerImageName": "",
+            "ThumbnailImageName": "thumbnail.png",
+            "description": "You can invite me to your channel, and I can mimic sounds or play music for you. But you can directly use on of the voice effects and streams directly instead, I will be able to find your channel and join"
+        },
+        "buttons": [
+            { "id": "join", "label": "Join", "style": "Primary" },
+            { "id": "leave", "label": "Kick", "style": "Danger" }
+        ]
+    },
+    {
+        "groupId": "1",
+        "embed": {   
+            "title": "Memes",
+            "Color": "Red",
+            "BannerImageName": "",
+            "ThumbnailImageName": "thumbnail.png",
+            "description": "lorem ipsum"
+        }
+        ,
+        "description": "lorem ipsum",
+        "buttons": [
+            { "id": "demacia", "label": "🔊 demacia", "style": "Primary" },
+            { "id": "drum", "label": "🔊 drum", "style": "Primary" },
+            { "id": "fart", "label": "🔊 FartHD", "style": "Primary" }
+        ]
+    },
+    {
+        "groupId": "2",
+        "embed": {   
+            "title": "Horse",
+            "Color": "Red",
+            "BannerImageName": "",
+            "ThumbnailImageName": "thumbnail.png",
+            "description": "lorem ipsum"
+        },
+        "buttons": [
+            { "id": "horse1", "label": "🔊 horse1", "style": "Primary" },
+            { "id": "horse2", "label": "🔊 horse2", "style": "Primary" },
+            { "id": "horse3", "label": "🔊 horse3", "style": "Primary" }
+        ]
+    }
+]

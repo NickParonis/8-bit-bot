@@ -9,6 +9,7 @@ async function eventHandler(client) {
 
 	client.on(Events.InteractionCreate, async (interaction) => {
 		if (!interaction.isButton()) return;
+		console.log(interaction.customId);
         // await interaction.deferUpdate();
         let userId = interaction.user.id;
         let channelId = await userController.findUserVoiceChannelId(interaction.guild, userId)
@@ -20,7 +21,9 @@ async function eventHandler(client) {
 
 			voiceSessions.set(channelId, voiceSession);
 			storedVoiceSession = voiceSession;
-		}
+		};
+
+
 	
 		await messageController.playSound(storedVoiceSession, interaction.customId);
 	});
