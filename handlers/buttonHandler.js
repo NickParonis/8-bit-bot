@@ -1,10 +1,10 @@
-import messageController from '../controllers/messageController.js';
+import voiceController from '../controllers/voiceController.js';
 import userController from '../controllers/userController.js';
+import voiceUtils from '../utils/voiceUtils.js';
 import { Events } from 'discord.js';
 
 
-async function eventHandler(client) {
-	let voiceSessions = new Map();
+async function buttonHandler(client, voiceSessions) {
 
 	client.on(Events.InteractionCreate, async (interaction) => {
 		if (!interaction.isButton()) return;
@@ -16,17 +16,17 @@ async function eventHandler(client) {
 		let storedVoiceSession;
 		switch (command) {
 			case 'playSound':
-				channelId 
-				storedVoiceSession = await getOrCreateVoiceSession(interaction, channelId);
+				storedVoiceSession = await voiceUtils.getOrCreateVoiceSession(interaction, channelId, voiceSessions);
 				if (!storedVoiceSession) break;
-				const soundName = args.join("_"); // to handle names with underscores
-				await messageController.playSound(storedVoiceSession, soundName);
+
+				const fileName = args.join("_"); // to handle names with underscores
+				await voiceController.playSound(storedVoiceSession, fileName);
 				interaction.deferUpdate();
 				break;
 	
 			case 'joinChannel':
 				channelId = await userController.findUserVoiceChannelId(interaction.guild, userId);
-				storedVoiceSession = await getOrCreateVoiceSession(interaction, channelId);
+				storedVoiceSession = await voiceUtils.getOrCreateVoiceSession(interaction, channelId, voiceSessions);
 				interaction.deferUpdate();
 				break;
 
@@ -46,21 +46,9 @@ async function eventHandler(client) {
 				console.log('Unknown command in customId:', command);
 		};	
 	});
-
-	async function getOrCreateVoiceSession(interaction, channelId) {
-		let session = voiceSessions.get(channelId);
-		if (!session) {
-			session = await messageController.createVoiceSession(interaction, channelId);
-			if (!session) {
-				console.log('Failed to join voice channel!');
-				return null;
-			}
-			voiceSessions.set(channelId, session);
-		}
-		return session;
-	}
 };
 
+
 export default {
-    eventHandler
+    buttonHandler
 };

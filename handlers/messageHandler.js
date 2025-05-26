@@ -1,11 +1,11 @@
-import messageController from '../controllers/messageController.js';
+import messageController from '../controllers/voiceController.js';
 import { AttachmentBuilder, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, Events } from 'discord.js';
 import userController from '../controllers/userController.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-async function messageCreateHandler(client) {
+async function messageHandler(client) {
     const COMMAND_PREFIX = '%';
     // const TERMINAL_CHANNEL_ID = '1367078981593202740';
 	let voiceSessions = new Map();
@@ -24,16 +24,11 @@ async function messageCreateHandler(client) {
 		const args = command.slice(commandName.length).trim();
 
 		if (commandName === 'readDiscordUsers') {
-			await userController.readDiscordUsers(message);
+			await userController.readDiscordUsers(message.guild);
 		}
-
-		if (commandName === 'test') {
-			messageController.testBot(message);
-		}
-
-		if (commandName === 'chat') {
-			await messageController.chatBot(message, args);
-		}
+		// if (commandName === 'chat') {
+		// 	await messageController.chatBot(message, args);
+		// }
 
 		if (commandName === 'join') {
 			if (voiceSessions.has(message.guild.id)) {
@@ -74,9 +69,6 @@ async function messageCreateHandler(client) {
 				  
 				for (const group of soundEffectBoard) {
 
-					const bannerPath = path.join(__dirname, '../content/img', group.embed.BannerImageName);
-					const thumbPath = path.join(__dirname, '../content/img', group.embed.ThumbnailImageName);
-
 					// each groop displays/sends in message channel 1 embed and rows of up to 5 buttons
 					const embed = new EmbedBuilder()
 						.setColor(group.embed.Color);
@@ -107,9 +99,9 @@ async function messageCreateHandler(client) {
 					}
 
 					const rows = [];
-					for (let i = 0; i < group.buttons.length; i += 5) {
+					for (let i = 0; i < group.buttons.length; i += 3) {
 						const row = new ActionRowBuilder();
-						const chunk = group.buttons.slice(i, i + 5);
+						const chunk = group.buttons.slice(i, i + 3);
 					
 						chunk.forEach(btn => {
 							row.addComponents(new ButtonBuilder()
@@ -142,5 +134,5 @@ async function messageCreateHandler(client) {
 };
 
 export default {
-  	messageCreateHandler
+  	messageHandler
 };

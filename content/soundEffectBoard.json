@@ -10,7 +10,7 @@
             "description": " "
         },
         "buttons": [
-            { "id": "joinChannel", "label": "Join", "style": "Success" },
+            { "id": "joinChannel", "label": "Invite", "style": "Success" },
             { "id": "leaveChannel", "label": "Kick", "style": "Danger" }
         ]
     },
