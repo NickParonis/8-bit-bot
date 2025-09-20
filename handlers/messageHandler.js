@@ -1,7 +1,7 @@
 import messageController from '../controllers/voiceController.js';
 import { Events } from 'discord.js';
 import userController from '../controllers/userController.js';
-import boardUtils from '../helpers/boardHelper.js';
+import boardHelper from '../helpers/boardHelper.js';
 
 
 async function messageHandler(client, voiceSessions) {
@@ -51,7 +51,7 @@ async function messageHandler(client, voiceSessions) {
 
 			case 'createSoundBoard':
 				try {
-					boardUtils.createSoundBoard(message)
+					boardHelper.createSoundBoard(message)
 				} catch (error) {
 					console.error('Failed to clear board messages or send new board:', error);
 					await message.channel.send('Sorry, I couldn\'t update the sound effects board.');

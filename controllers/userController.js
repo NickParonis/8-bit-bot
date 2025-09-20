@@ -12,7 +12,7 @@ async function readDiscordUsers(guild) {
 		.join('\n');
 
 	} catch (error) {
-		console.error('Error while fetching user IDs and names:', error);
+		console.error('❌ Error while fetching user IDs and names:', error);
 	}
 };
 

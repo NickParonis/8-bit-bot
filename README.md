@@ -11,7 +11,7 @@ Welcome to the **Discord Bot Project**, a Node.js-based bot built with a focus o
   - Easy to maintain, test, and scale
 
 - 🖼️ **Interactive UI Elements**
-  - Buttons, Embeds, and Banners (using commands and event handlers)
+  - Buttons, Embeds, and Banners
   - Responsive interactions that feel natural in Discord
 
 ---

@@ -27,7 +27,7 @@ async function playSound(voiceSession, fileName) {
 	try {
 		await voiceService.playAudioFile(voiceSession, fileName);
 	} catch (error) {
-		console.error('Controller: playSound failed', error);
+		console.error('❌ Controller: playSound failed', error);
 		await voiceSession.connection.destroy();
 	}
 };
