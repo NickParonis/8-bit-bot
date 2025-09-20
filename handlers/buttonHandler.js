@@ -1,6 +1,6 @@
 import voiceController from '../controllers/voiceController.js';
 import userController from '../controllers/userController.js';
-import voiceUtils from '../utils/voiceUtils.js';
+import voiceUtils from '../helpers/voiceHelper.js';
 import { Events } from 'discord.js';
 
 
@@ -40,12 +40,12 @@ async function buttonHandler(client, voiceSessions) {
 				}
 				interaction.deferUpdate();
 				break;
+			
 			default:
 				console.log('Unknown command in customId:', command);
 		};	
 	});
 };
-
 
 export default {
     buttonHandler

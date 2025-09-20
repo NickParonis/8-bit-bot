@@ -7,11 +7,11 @@ Welcome to the **Discord Bot Project**, a Node.js-based bot built with a focus o
 ## ✨ Features
 
 - ⚙️ **Modular and Clean Code Structure**
-  - Follows a layered architecture (handlers, controllers, services, commands, events)
+  - Follows a layered architecture: controllers, services and commands/event handlers for UI interaction
   - Easy to maintain, test, and scale
 
 - 🖼️ **Interactive UI Elements**
-  - Buttons, Embeds, and Banners
+  - Buttons, Embeds, and Banners (using commands and event handlers)
   - Responsive interactions that feel natural in Discord
 
 ---

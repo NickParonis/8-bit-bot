@@ -31,7 +31,7 @@ async function connectToChannel(guild, channelId) {
 
 	await entersState(connection, VoiceConnectionStatus.Ready, 30_000);
 	return connection;
-}
+};
 
 function createPlayer(){
     let player = createAudioPlayer();

@@ -1,7 +1,7 @@
 import messageController from '../controllers/voiceController.js';
 import { Events } from 'discord.js';
 import userController from '../controllers/userController.js';
-import boardUtils from '../utils/boardUtils.js';
+import boardUtils from '../helpers/boardHelper.js';
 
 
 async function messageHandler(client, voiceSessions) {
