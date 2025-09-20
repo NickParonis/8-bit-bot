@@ -5,10 +5,8 @@ import { Events } from 'discord.js';
 
 
 async function buttonHandler(client, voiceSessions) {
-
 	client.on(Events.InteractionCreate, async (interaction) => {
 		if (!interaction.isButton()) return;
-		// console.log("inneraction id is " + interaction.customId);
 
 		const [command, ...args] = interaction.customId.split("_");
 		let userId = interaction.user.id;

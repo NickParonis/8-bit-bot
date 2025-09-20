@@ -3,7 +3,6 @@ import voiceService from '../services/voiceService.js';
 
 async function createVoiceSession(interaction, channelId) {
 	let connection;
-
 	try {
 		connection = await voiceService.connectToChannel(interaction.guild, channelId);
 		const player = voiceService.createPlayer();

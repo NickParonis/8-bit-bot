@@ -1,7 +1,6 @@
 import voiceController from '../controllers/voiceController.js';
 
-
-async function getOrCreateVoiceSession(interaction, channelId, voiceSessions, createVoiceSession) {
+async function getOrCreateVoiceSession(interaction, channelId, voiceSessions) {
 	let session = voiceSessions.get(channelId);
 	if (!session) {
 		session = await voiceController.createVoiceSession(interaction, channelId);
@@ -12,9 +11,7 @@ async function getOrCreateVoiceSession(interaction, channelId, voiceSessions, cr
 		voiceSessions.set(channelId, session);
 	}
 	return session;
-}
-
-
+};
 
 export default {
 	getOrCreateVoiceSession
